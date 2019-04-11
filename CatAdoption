@@ -1,0 +1,80 @@
+contract CatAdoption{
+    
+    struct Cat{
+       string PetName;
+       string OwnerName;
+       string Breed;
+       address OwnerAddress;
+       uint Position;
+       uint Num;
+    }
+
+    mapping (uint => Cat) cat;
+    Cat [10] public CatLists;
+    uint ListPosition;
+
+    constructor() payable public{
+         ListPosition = 0;
+         
+         cat[1].Breed = "korat cat";
+         cat[2].Breed = "bengali cat";
+         cat[3].Breed = "orange tabby cat";
+         cat[4].Breed = "persian cat";
+         cat[5].Breed = "garfield cat";
+         cat[6].Breed = "russian blue cat";
+         cat[7].Breed = "scottish fold cat";
+         cat[8].Breed = "ragdoll cat";
+         cat[9].Breed = "american curl cat";
+         cat[10].Breed = "snowshoe cat";
+         
+         oraclize_setProof(proofType_Ledger);
+    }
+    
+    function setCatOwner(string memory PetName, string memory  OwnerName) public {
+        getrandomNumber;
+        Cat storage CatToBeAdopt = cat[randomNumber];
+        CatToBeAdopt.PetName = PetName;
+        CatToBeAdopt.OwnerName = OwnerName;
+        CatToBeAdopt.OwnerAddress = msg.sender;
+        CatLists[ListPosition] = CatToBeAdopt;
+        ListPosition++;
+    }
+    
+    function findCat(address OwnerAddress) private returns (uint){
+        
+        for (uint i=0;i<CatLists.length;i++){
+            if(CatLists[i].OwnerAddress== OwnerAddress){
+                return i;
+            }
+        }
+    }
+    
+    function getCat(address OwnerAddress)public returns (string memory, string memory,string memory,address,uint){
+        ListPosition = findCat(OwnerAddress);
+        return (cat[ListPosition].PetName, cat[ListPosition].OwnerName, cat[ListPosition].Breed, 
+        cat[ListPosition].OwnerAddress, 
+        cat[ListPosition].Position);
+    }
+    //address is not working.
+    
+    uint public randomNumber;
+    bytes32 myId;
+
+    function __callback(bytes32 _myId,string memory _result,bytes memory _proof) public {
+        require(msg.sender == oraclize_cbAddress());
+
+        if (oraclize_randomDS_proofVerify__returnCode(_myId, _result, _proof) == 0) {
+            uint maxRange = 10; // N = 7
+            randomNumber = uint(keccak256(abi.encodePacked(_result))) % maxRange; // random number in the interval [0, 2^56 - 1]
+        } else {
+        }
+    }
+        
+    function getrandomNumber ()public payable {
+        uint N = 32; // number of random bytes we want the datasource to return
+        uint delay = 0; // number of seconds to wait before the execution takes place
+        uint callbackGas = 300000; // amount of gas we want Oraclize to set for the callback function
+        myId = oraclize_newRandomDSQuery(delay, N, callbackGas); // this function internally generates the correct oraclize_query and returns its queryId
+    }
+
+}
